@@ -7,7 +7,8 @@ const public_users = express.Router();
 
 public_users.post("/register", (req,res) => {
   //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+  let availableBooks = JSON.stringify(books);
+  return res.status(200).json({ availableBooks });
 });
 
 // Get the book list available in the shop
