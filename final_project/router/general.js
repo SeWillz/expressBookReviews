@@ -8,7 +8,7 @@ const public_users = express.Router();
 public_users.post("/register", (req,res) => {
   //Write your code here
   let availableBooks = JSON.stringify(books);
-  return res.status(200).json({ availableBooks });
+  return res.status(300).json({ availableBooks });
 });
 
 // Get the book list available in the shop
