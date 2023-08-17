@@ -29,6 +29,7 @@ app.use("/customer/auth/*", function auth(req, res, next) {
   } else {
     return res.status(208).json({message: "Invalid Login. Check username and password"});
   }});
+});
 
 const PORT = 5000;
 
