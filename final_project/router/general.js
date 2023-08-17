@@ -1,97 +1,93 @@
 const express = require('express');
+const axios = require('axios'); // Import Axios library
 let books = require("./booksdb.js");
 let isValid = require("./auth_users.js").isValid;
 let users = require("./auth_users.js").users;
 const public_users = express.Router();
 
-
-public_users.post("/register", (req,res) => {
-  //Write your code here
-  const username = req.body.username;
-  const password = req.body.password;
-
-  // Check if both username and password are provided
-  if (!username || !password) {
-    return res.status(400).json({ message: "Both username and password are required" });
+// axios promis
+const axiosGet = async (url) => {
+  try {
+    const response = await axios.get(url);
+    return response.data;
+  } catch (error) {
+    throw error;
   }
+};
 
-  // Check if the username already exists
-  if (isValid(username)) {
-    return res.status(409).json({ message: "Username already exists" });
+public_users.post("/register", async (req, res) => {
+  try {
+    const username = req.body.username;
+    const password = req.body.password;
+
+    // Check if both username and password are provided
+    if (!username || !password) {
+      return res.status(400).json({ message: "Both username and password are required" });
+    }
+
+    // Check if the username already exists
+    if (isValid(username)) {
+      return res.status(409).json({ message: "Username already exists" });
+    }
+
+    // Register the new user
+    users.push({ "username": username, "password": password });
+    return res.status(200).json({ message: "User successfully registered. Now you can login" });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
   }
-
-  // Register the new user
-  users.push({ "username": username, "password": password });
-  return res.status(200).json({ message: "User successfully registered. Now you can login" });
 });
 
 // Get the book list available in the shop
-public_users.get('/',function (req, res) {
-  //Write your code here
-  let availableBooks = JSON.stringify(books, null, 2);
-  return res.status(200).send(availableBooks);
+public_users.get('/', async (req, res) => {
+  try {
+    const availableBooks = JSON.stringify(books, null, 2);
+    return res.status(200).send(availableBooks);
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
 });
 
 // Get book details based on ISBN
-public_users.get('/isbn/:isbn',function (req, res) {
-  //Write your code here
-  const isbn = req.params.isbn; // Get the ISBN from request parameters
-
-  if (books.hasOwnProperty(isbn)) {
-    const bookDetails = books[isbn];
+public_users.get('/isbn/:isbn', async (req, res) => {
+  try {
+    const isbn = req.params.isbn;
+    const bookDetails = await axiosGet(`http://localhost:5000/books/${isbn}`);
     return res.status(200).json(bookDetails);
-  } else {
+  } catch (error) {
     return res.status(404).json({ message: "Book not found" });
   }
-})
-  
+});
+
 // Get book details based on author
-public_users.get('/author/:author',function (req, res) {
-  //Write your code here
-  const author = req.params.author; // Get the author from request parameters
-  const booksByAuthor = {};
-
-  for (const isbn in books) {
-    if (books.hasOwnProperty(isbn) && books[isbn].author === author) {
-      booksByAuthor[isbn] = books[isbn];
-    }
-  }
-
-  if (Object.keys(booksByAuthor).length > 0) {
+public_users.get('/author/:author', async (req, res) => {
+  try {
+    const author = req.params.author;
+    const booksByAuthor = await axiosGet(`http://localhost:5000/books?author=${author}`);
     return res.status(200).json(booksByAuthor);
-  } else {
+  } catch (error) {
     return res.status(404).json({ message: "No books found by this author" });
   }
 });
 
 // Get all books based on title
-public_users.get('/title/:title',function (req, res) {
-  //Write your code here
-  const title = req.params.title; // Get the title from request parameters
-  const booksWithTitle = {};
-
-  for (const isbn in books) {
-    if (books.hasOwnProperty(isbn) && books[isbn].title === title) {
-      booksWithTitle[isbn] = books[isbn];
-    }
-  }
-
-  if (Object.keys(booksWithTitle).length > 0) {
+public_users.get('/title/:title', async (req, res) => {
+  try {
+    const title = req.params.title;
+    const booksWithTitle = await axiosGet(`http://localhost:5000/books?title=${title}`);
     return res.status(200).json(booksWithTitle);
-  } else {
+  } catch (error) {
     return res.status(404).json({ message: "No books found with this title" });
   }
 });
 
-//  Get book review
-public_users.get('/review/:isbn',function (req, res) {
-  //Write your code here
-  const isbn = req.params.isbn; // Get the ISBN from request parameters
-
-  if (books.hasOwnProperty(isbn)) {
-    const bookReviews = books[isbn].reviews;
+// Get book review
+public_users.get('/review/:isbn', async (req, res) => {
+  try {
+    const isbn = req.params.isbn;
+    const bookReviews = await axiosGet(`http://localhost:5000/reviews/${isbn}`);
     return res.status(200).json(bookReviews);
-  } else {
+  } catch (error) {
     return res.status(404).json({ message: "Book not found" });
   }
 });
