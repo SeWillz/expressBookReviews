@@ -13,7 +13,6 @@ const isValid = (username)=>{ //returns boolean
   }
     return false;
   }
-  
   const authenticatedUser = (username,password)=>{
       let validUser = users.filter((user)=>{
         return (user.username === username && user.password === password)
@@ -29,20 +28,18 @@ const isValid = (username)=>{ //returns boolean
 regd_users.post("/login", (req,res) => {
     const username = req.body.username;
     const password = req.body.password;
-  
     if (authenticatedUser(username, password)) {
       let accessToken = jwt.sign({data: password}, 'password', {expiresIn: 60*60});
       req.session.authorization = {accessToken, username}
       return res.status(200).json({message: "User successfully logged in."})
     }
     else {
-      return res.status(300).json({message: "Username and password do not match our records. Please try again."});
+      return res.status(300).json({message: "The username and password do not match."});
     }
   });
 
 // Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
-
     const isbn = req.params.isbn;
     let filtered_book = books[isbn]
     if (filtered_book) {
@@ -52,22 +49,19 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
             filtered_book['reviews'][reviewer] = review;
             books[isbn] = filtered_book;
         }
-        res.send(`The review for the book with ISBN  ${isbn} has been added/updated.`);
+        res.send(`The review for the book with ISBN  ${isbn} has been added.`);
     }
     else{
-        res.send("Unable to find this ISBN!");
+        res.send("Unable to find isbn");
     }
   });
 
   regd_users.delete("/auth/review/:isbn", (req, res) => {
     const isbn = req.params.isbn;
-
     if (!books[isbn]) {
         return res.status(404).send("Unable to find this ISBN!");
     }
-
     delete books[isbn]['reviews'];
-
     return res.status(200).send(`The review for the book with ISBN ${isbn} has been deleted.`);
   });
 
